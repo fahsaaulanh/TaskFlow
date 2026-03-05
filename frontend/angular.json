@@ -59,7 +59,8 @@
               "buildTarget": "taskflow:build:production"
             },
             "development": {
-              "buildTarget": "taskflow:build:development"
+              "buildTarget": "taskflow:build:development",
+              "proxyConfig": "src/proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
