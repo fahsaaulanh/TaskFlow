@@ -18,13 +18,7 @@ Install the .NET 10 SDK, Node.js 24.15 or newer in the Node 24 line, and Docker 
    dotnet run --project backend/TaskFlow.Api --launch-profile http
    ```
 
-   The API listens on `http://127.0.0.1:5252`. The current `/health` endpoint checks that the API is responding. Database access will be configured when EF Core is added. That setup will use the ASP.NET Core environment variable `ConnectionStrings__TaskFlow` with a value in this format:
-
-   ```text
-   Server=127.0.0.1,14333;Database=TaskFlow;User ID=sa;Password=<local SQL password>;Encrypt=True;TrustServerCertificate=True
-   ```
-
-   Use the password and port from your local `.env`. Keep `TrustServerCertificate=True` for the local container only.
+   The API listens on `http://127.0.0.1:5252`. The `/health` endpoint checks that the API is responding. To set up the database, follow the migration instructions below.
 
 3. In a third terminal, start Angular:
 
@@ -35,3 +29,24 @@ Install the .NET 10 SDK, Node.js 24.15 or newer in the Node 24 line, and Docker 
    ```
 
    Open `http://localhost:4200`. Angular's development server forwards `/api/**` and `/health` to the local API. Check `http://localhost:4200/health` for `{"status":"ok"}`.
+
+## Database migrations
+
+With the local SQL Server container running, open PowerShell at the repository root. These commands load the connection settings from Compose into the current terminal and apply the EF Core migrations to the local `TaskFlow` database.
+
+```powershell
+$sql = (docker compose config --format json | ConvertFrom-Json).services.sqlserver
+$connection = [System.Data.Common.DbConnectionStringBuilder]::new()
+$connection['Server'] = "127.0.0.1,$($sql.ports[0].published)"
+$connection['Database'] = 'TaskFlow'
+$connection['User ID'] = 'sa'
+$connection['Password'] = $sql.environment.MSSQL_SA_PASSWORD
+$connection['Encrypt'] = 'True'
+$connection['TrustServerCertificate'] = 'True'
+$env:ConnectionStrings__TaskFlow = $connection.ConnectionString
+
+dotnet tool restore
+dotnet ef database update --project backend/TaskFlow.Infrastructure --startup-project backend/TaskFlow.Api
+```
+
+Run the API from that same terminal when using database features. `TrustServerCertificate=True` is for the local development container only.
