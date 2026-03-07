@@ -50,3 +50,15 @@ dotnet ef database update --project backend/TaskFlow.Infrastructure --startup-pr
 ```
 
 Run the API from that same terminal when using database features. `TrustServerCertificate=True` is for the local development container only.
+
+## Demo data
+
+After applying the migrations, use the same PowerShell terminal to seed an empty local database. Choose a local password of at least 12 characters and keep it for both demo accounts.
+
+```powershell
+$env:TaskFlow__DemoPassword = Read-Host 'Local demo password' -MaskInput
+dotnet run --project backend/TaskFlow.Api --launch-profile http -- --seed-demo
+Remove-Item Env:TaskFlow__DemoPassword
+```
+
+The seed creates `alex@taskflow.test` and `dina@taskflow.test`, a shared board, and three tasks. It runs only when explicitly requested in Development and skips databases with existing boards or users. The API does not seed on normal startup.
