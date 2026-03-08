@@ -113,7 +113,65 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BoardId", "AssigneeId");
 
-                    b.ToTable("Tasks");
+                    b.HasIndex("BoardId", "ArchivedAt", "Status", "SortOrder", "Id")
+                        .HasDatabaseName("IX_Tasks_Board_ActiveStatusOrder");
+
+                    b.ToTable("Tasks", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Tasks_Priority", "[Priority] IN ('Low', 'Medium', 'High')");
+
+                            t.HasCheckConstraint("CK_Tasks_SortOrder", "[SortOrder] >= 0");
+
+                            t.HasCheckConstraint("CK_Tasks_Status", "[Status] IN ('Todo', 'InProgress', 'Done')");
+
+                            t.HasCheckConstraint("CK_Tasks_Title_Length", "LEN(LTRIM(RTRIM([Title]))) BETWEEN 3 AND 120");
+                        });
+                });
+
+            modelBuilder.Entity("TaskFlow.Domain.TaskStatusChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ActorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("OccurredAtUtc", "Id")
+                        .IsDescending();
+
+                    b.ToTable("TaskStatusChanges", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TaskStatusChanges_DifferentStatuses", "[PreviousStatus] <> [NewStatus]");
+
+                            t.HasCheckConstraint("CK_TaskStatusChanges_NewStatus", "[NewStatus] IN ('Todo', 'InProgress', 'Done')");
+
+                            t.HasCheckConstraint("CK_TaskStatusChanges_PreviousStatus", "[PreviousStatus] IN ('Todo', 'InProgress', 'Done')");
+                        });
                 });
 
             modelBuilder.Entity("TaskFlow.Domain.User", b =>
@@ -146,6 +204,9 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
@@ -176,6 +237,21 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("BoardId", "AssigneeId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("TaskFlow.Domain.TaskStatusChange", b =>
+                {
+                    b.HasOne("TaskFlow.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TaskFlow.Domain.BoardTask", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
