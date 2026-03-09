@@ -62,3 +62,16 @@ Remove-Item Env:TaskFlow__DemoPassword
 ```
 
 The seed creates `alex@taskflow.test` and `dina@taskflow.test`, a shared board, and three tasks. It runs only when explicitly requested in Development and skips databases with existing boards or users. The API does not seed on normal startup.
+
+## Authentication API
+
+Use same-origin `/api/auth` requests through the Angular development proxy. Login sets an HTTP-only session cookie. Outside Development, the session and CSRF cookies require HTTPS.
+
+| Request | Result |
+| --- | --- |
+| `GET /api/auth/csrf` | Sets the `XSRF-TOKEN` cookie for subsequent writes. |
+| `POST /api/auth/login` | Accepts JSON `email` and `password`. Returns the signed-in user or a generic `401` for invalid credentials. |
+| `GET /api/auth/session` | Returns the signed-in user or `401` if there is no session. |
+| `POST /api/auth/logout` | Clears the session cookie and returns `204`. |
+
+Send `XSRF-TOKEN` as `X-XSRF-TOKEN` on login and logout. Fetch a fresh token after either successful authentication change.
