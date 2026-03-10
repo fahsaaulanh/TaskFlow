@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Text.Json.Serialization;
 using TaskFlow.Api.Auth;
+using TaskFlow.Api.Boards;
 using TaskFlow.Api.Development;
 using TaskFlow.Application.Auth;
 using TaskFlow.Infrastructure;
@@ -7,6 +9,8 @@ using TaskFlow.Infrastructure;
 var seedDemo = args is ["--seed-demo"];
 var builder = WebApplication.CreateBuilder(seedDemo ? [] : args);
 builder.Services.AddTaskFlowPersistence(builder.Configuration);
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
 builder.Services.AddScoped<SignInService>();
 builder.Services.AddSingleton<IPasswordVerifier, IdentityPasswordVerifier>();
 var cookiePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
@@ -50,5 +54,6 @@ if (seedDemo)
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapTaskFlowAuth();
+app.MapTaskFlowBoards();
 
 app.Run();
