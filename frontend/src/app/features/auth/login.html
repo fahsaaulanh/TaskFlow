@@ -1,0 +1,24 @@
+<main class="signin-page">
+  <section class="signin-panel" aria-labelledby="signin-heading">
+    <img class="brand" src="taskflow-logo.svg" alt="TaskFlow">
+    <h1 id="signin-heading">Sign in to your workspace</h1>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" formControlName="email" required
+        [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+        [attr.aria-describedby]="form.controls.email.touched && form.controls.email.invalid ? 'email-error' : null">
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <p class="field-error" id="email-error">Enter a valid email address.</p>
+      }
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" formControlName="password" required
+        [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+        [attr.aria-describedby]="form.controls.password.touched && form.controls.password.invalid ? 'password-error' : null">
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <p class="field-error" id="password-error">Enter your password.</p>
+      }
+      @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+      <button class="primary" type="submit" [disabled]="busy()">{{ busy() ? 'Signing in…' : 'Sign in' }}</button>
+    </form>
+  </section>
+</main>

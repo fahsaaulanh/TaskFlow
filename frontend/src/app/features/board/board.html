@@ -1,0 +1,62 @@
+<header class="workspace-bar">
+  <img class="brand" src="taskflow-logo.svg" alt="TaskFlow">
+  <div class="account">
+    <span>{{ user()?.displayName }}</span>
+    <button type="button" (click)="signOut()" [disabled]="signingOut()">{{ signingOut() ? 'Signing out…' : 'Sign out' }}</button>
+  </div>
+</header>
+
+<main class="workspace">
+  <h1>{{ board()?.name ?? 'Workspace' }}</h1>
+  @if (logoutError()) { <p class="notice" role="alert">{{ logoutError() }}</p> }
+  @if (board()) {
+    <div class="toolbar" aria-label="Task filters">
+      <label>Status
+        <select #status [value]="filters().status" (change)="changeFilter('status', status.value)">
+          <option value="">All statuses</option>
+          @for (column of statuses; track column.status) { <option [value]="column.status">{{ column.label }}</option> }
+        </select>
+      </label>
+      <label>Priority
+        <select #priority [value]="filters().priority" (change)="changeFilter('priority', priority.value)">
+          <option value="">All priorities</option>
+          <option>Low</option><option>Medium</option><option>High</option>
+        </select>
+      </label>
+      <label>Assignee
+        <select #assignee [value]="filters().assigneeId" (change)="changeFilter('assigneeId', assignee.value)">
+          <option value="">All assignees</option>
+          @for (member of members(); track member.id) { <option [value]="member.id">{{ member.displayName }}</option> }
+        </select>
+      </label>
+      <button type="button" (click)="clearFilters()">Clear filters</button>
+    </div>
+  }
+  @if (loading()) {
+    <p class="notice" role="status">Loading tasks…</p>
+  } @else if (error()) {
+    <div class="notice" role="alert">{{ error() }} <button type="button" (click)="retry()">Try again</button></div>
+  } @else if (!board()) {
+    <p class="notice">You don’t have a board assigned yet.</p>
+  } @else {
+    <p class="task-count" aria-live="polite">{{ total() }} {{ total() === 1 ? 'task' : 'tasks' }}</p>
+    <div class="lanes">
+      @for (lane of lanes(); track lane.status) {
+        <section class="lane" [attr.data-status]="lane.status" [attr.aria-labelledby]="lane.status">
+          <h2 [id]="lane.status">{{ lane.label }} <span>{{ lane.tasks.length }}</span></h2>
+          @for (task of lane.tasks; track task.id) {
+            <article class="task">
+              <span class="priority" [attr.data-priority]="task.priority">{{ task.priority }}</span>
+              <h3>{{ task.title }}</h3>
+              @if (task.description) { <p>{{ task.description }}</p> }
+              <footer>
+                <span>{{ task.assigneeId === null ? 'Unassigned' : memberNames().get(task.assigneeId) ?? 'Unassigned' }}</span>
+                @if (task.dueDate) { <time [attr.datetime]="task.dueDate">{{ task.dueDate | date: 'MMM d' }}</time> }
+              </footer>
+            </article>
+          } @empty { <p class="empty">No matching tasks.</p> }
+        </section>
+      }
+    </div>
+  }
+</main>

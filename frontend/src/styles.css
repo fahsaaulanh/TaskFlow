@@ -1,1 +1,18 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --ink: #29364d;
+  --muted: #546176;
+  --line: #e0e2eb;
+  --indigo: #5652a4;
+  font: 15px/1.5 'DM Sans', system-ui, sans-serif;
+  color: var(--ink);
+  background: #f8f9fc;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+h1, h2, h3 { font-family: Manrope, system-ui, sans-serif; }
+input, select, button { font: inherit; color: inherit; border: 1px solid var(--line); border-radius: .45rem; background: white; padding: .55rem .75rem; }
+button { cursor: pointer; font-weight: 600; }
+button:disabled { opacity: .65; cursor: wait; }
+:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+.primary { color: white; background: var(--indigo); border-color: var(--indigo); }

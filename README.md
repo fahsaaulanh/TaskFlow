@@ -28,7 +28,7 @@ Install the .NET 10 SDK, Node.js 24.15 or newer in the Node 24 line, and Docker 
    npm start
    ```
 
-   Open `http://localhost:4200`. Angular's development server forwards `/api/**` and `/health` to the local API. Check `http://localhost:4200/health` for `{"status":"ok"}`.
+   Open `http://localhost:4200` and sign in with a seeded account to open the board. Angular's development server forwards `/api/**` and `/health` to the local API. Check `http://localhost:4200/health` for `{"status":"ok"}`.
 
 ## Database migrations
 

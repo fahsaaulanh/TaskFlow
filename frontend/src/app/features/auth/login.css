@@ -1,0 +1,24 @@
+.signin-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(150deg, #efedf8, #f8f9fc 58%, #eaf4f0);
+}
+
+.signin-panel {
+  width: min(100%, 27rem);
+  padding: clamp(1.5rem, 6vw, 2.5rem);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+}
+
+.brand { width: 10rem; display: block; margin-bottom: 1.75rem; }
+h1 { font-size: 1.45rem; margin: 0 0 1.5rem; }
+form { display: grid; gap: .55rem; }
+label { font-weight: 600; }
+label:not(:first-child) { margin-top: .75rem; }
+.primary { margin-top: 1rem; }
+.field-error, .form-error { margin: 0; color: #a13e34; }
+.form-error { padding: .75rem; background: #fff1ec; border-radius: .5rem; }
