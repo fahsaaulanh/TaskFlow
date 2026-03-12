@@ -19,6 +19,13 @@ export interface TaskSummary {
 }
 
 export interface TaskFilters { status: string; priority: string; assigneeId: string; }
+export interface TaskForm {
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  dueDate: string | null;
+  assigneeId: number | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class BoardApi {
@@ -36,5 +43,17 @@ export class BoardApi {
       if (value) params = params.set(name, value);
     }
     return this.http.get<TaskSummary[]>(`/api/boards/${boardId}/tasks`, { params });
+  }
+
+  createTask(boardId: number, form: TaskForm) {
+    return this.http.post<TaskSummary>(`/api/boards/${boardId}/tasks`, form);
+  }
+
+  editTask(boardId: number, task: TaskSummary, form: TaskForm) {
+    return this.http.put<TaskSummary>(`/api/boards/${boardId}/tasks/${task.id}`, { ...form, rowVersion: task.rowVersion });
+  }
+
+  archiveTask(boardId: number, task: TaskSummary) {
+    return this.http.post<void>(`/api/boards/${boardId}/tasks/${task.id}/archive`, { rowVersion: task.rowVersion });
   }
 }

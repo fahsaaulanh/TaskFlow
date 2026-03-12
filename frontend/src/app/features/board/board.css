@@ -13,7 +13,8 @@
 .brand { width: 9rem; }
 .account { display: flex; align-items: center; gap: .75rem; }
 .workspace { max-width: 96rem; margin-inline: auto; padding: 2rem clamp(1rem, 4vw, 3rem); }
-h1 { margin: 0 0 1.25rem; }
+.board-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+h1 { margin: 0; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: .85rem; }
 .toolbar label { display: grid; gap: .3rem; font-weight: 600; }
 .task-count, .empty { color: var(--muted); }
@@ -29,6 +30,7 @@ h2 span { font: 600 .75rem 'DM Sans', system-ui, sans-serif; background: #ffffff
 .task p, .task footer { color: var(--muted); font-size: .85rem; }
 .task p { margin: 0 0 .75rem; }
 .task footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; border-top: 1px solid var(--line); padding-top: .65rem; }
+.task-edit { padding: .1rem .45rem; }
 .priority { display: inline-block; padding: .15rem .45rem; border-radius: .3rem; font-size: .75rem; background: #efedf8; color: #4d438b; }
 .priority[data-priority='High'] { background: #fce8df; color: #8b412b; }
 .priority[data-priority='Low'] { background: #e4f3ed; color: #285f53; }

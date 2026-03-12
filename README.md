@@ -75,3 +75,5 @@ Use same-origin `/api/auth` requests through the Angular development proxy. Logi
 | `POST /api/auth/logout` | Clears the session cookie and returns `204`. |
 
 Send `XSRF-TOKEN` as `X-XSRF-TOKEN` on login and logout. Fetch a fresh token after either successful authentication change.
+
+Board members can create a task with `POST /api/boards/{boardId}/tasks`, edit it with `PUT /api/boards/{boardId}/tasks/{taskId}`, and archive it with `POST /api/boards/{boardId}/tasks/{taskId}/archive`. All three requests require the CSRF header. Edit and archive require the `rowVersion` from the task response. A stale version returns `409` so the client can reload the board. Archived tasks are retained in SQL Server and excluded from active task lists.

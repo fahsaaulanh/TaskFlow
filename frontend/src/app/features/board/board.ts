@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { EMPTY, Subject, catchError, finalize, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { BoardApi, BoardMember, BoardSummary, TaskFilters, TaskStatus, TaskSummary } from './board-api';
+import { TaskEditor } from './task-editor';
 
 const columns: ReadonlyArray<{ status: TaskStatus; label: string }> = [
   { status: 'Todo', label: 'To do' },
@@ -14,7 +15,7 @@ const columns: ReadonlyArray<{ status: TaskStatus; label: string }> = [
 ];
 const emptyFilters: TaskFilters = { status: '', priority: '', assigneeId: '' };
 
-@Component({ imports: [DatePipe], templateUrl: './board.html', styleUrl: './board.css' })
+@Component({ imports: [DatePipe, TaskEditor], templateUrl: './board.html', styleUrl: './board.css' })
 export class Board {
   private readonly api = inject(BoardApi);
   private readonly auth = inject(AuthService);
@@ -29,6 +30,7 @@ export class Board {
   protected readonly loading = signal(true);
   protected readonly error = signal('');
   protected readonly logoutError = signal('');
+  protected readonly updateMessage = signal('');
   protected readonly signingOut = signal(false);
   protected readonly statuses = columns;
   protected readonly total = computed(() => this.tasks().length);
@@ -66,6 +68,15 @@ export class Board {
   protected retry() {
     if (this.board()) this.loadTasks();
     else this.loadBoard();
+  }
+
+  protected taskSaved(message: string) {
+    this.updateMessage.set(message);
+    this.loadTasks();
+  }
+
+  protected sessionExpired() {
+    void this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 
   protected signOut() {
@@ -114,7 +125,7 @@ export class Board {
   private handleLoadError(error: HttpErrorResponse) {
     this.loading.set(false);
     if (error.status === 401) {
-      void this.router.navigateByUrl('/login', { replaceUrl: true });
+      this.sessionExpired();
     } else {
       this.error.set(error.status === 403 ? 'You do not have access to this board.' : 'Could not load the board.');
     }

@@ -1,0 +1,48 @@
+<dialog #dialog aria-labelledby="task-editor-title" (cancel)="cancel($event)" (close)="afterClose()">
+  <h2 id="task-editor-title">{{ task() ? 'Edit task' : 'New task' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <fieldset [disabled]="busy() || conflict() || confirmingArchive()">
+      <label for="task-title">Title</label>
+      <input id="task-title" formControlName="title" maxlength="120" required>
+      @if (form.controls.title.touched && form.controls.title.invalid) {
+        <p class="error" role="alert">Enter a title from 3 to 120 characters.</p>
+      }
+      <label for="task-description">Description</label>
+      <textarea id="task-description" formControlName="description" rows="3" maxlength="2000"></textarea>
+      <div class="fields">
+        <label for="task-priority">Priority
+          <select id="task-priority" formControlName="priority"><option>Low</option><option>Medium</option><option>High</option></select>
+        </label>
+        <label for="task-due-date">Due date
+          <input id="task-due-date" type="date" formControlName="dueDate">
+        </label>
+      </div>
+      <label for="task-assignee">Assignee</label>
+      <select id="task-assignee" formControlName="assigneeId">
+        <option [ngValue]="null">Unassigned</option>
+        @for (member of members(); track member.id) { <option [ngValue]="member.id">{{ member.displayName }}</option> }
+      </select>
+    </fieldset>
+
+    @if (errors().length) {
+      <ul class="error" role="alert">@for (error of errors(); track $index) { <li>{{ error }}</li> }</ul>
+    }
+    @if (confirmingArchive() && !conflict()) {
+      <p>Archive this task? It will be removed from the active board.</p>
+      <div class="actions">
+        <button type="button" (click)="confirmingArchive.set(false)" [disabled]="busy()">Back</button>
+        <button type="button" class="danger" (click)="archive()" [disabled]="busy()">{{ busy() ? 'Archiving…' : 'Archive task' }}</button>
+      </div>
+    } @else {
+      <div class="actions">
+        @if (task() && !conflict()) {
+          <button type="button" class="archive" (click)="confirmingArchive.set(true)" [disabled]="busy()">Archive…</button>
+        }
+        <button type="button" (click)="close()" [disabled]="busy()">{{ conflict() ? 'Close and reload' : 'Cancel' }}</button>
+        @if (!conflict()) {
+          <button type="submit" class="primary" [disabled]="busy()">{{ busy() ? 'Saving…' : 'Save task' }}</button>
+        }
+      </div>
+    }
+  </form>
+</dialog>

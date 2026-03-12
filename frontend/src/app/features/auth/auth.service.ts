@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { catchError, of, switchMap, tap, throwError } from 'rxjs';
+import { Observable, catchError, of, switchMap, tap, throwError } from 'rxjs';
 
 export interface SessionUser {
   id: number;
@@ -24,19 +24,21 @@ export class AuthService {
   }
 
   login(email: string, password: string) {
-    return this.http.get<void>('/api/auth/csrf').pipe(
-      switchMap(() => this.http.post<SessionUser>('/api/auth/login', { email, password })),
+    return this.withCsrf(() => this.http.post<SessionUser>('/api/auth/login', { email, password })).pipe(
       tap((user) => this.session.set(user)),
     );
   }
 
   logout() {
-    return this.http.get<void>('/api/auth/csrf').pipe(
-      switchMap(() => this.http.post<void>('/api/auth/logout', null)),
+    return this.withCsrf(() => this.http.post<void>('/api/auth/logout', null)).pipe(
       catchError((error: HttpErrorResponse) =>
         error.status === 401 ? of(undefined) : throwError(() => error),
       ),
       tap(() => this.session.set(null)),
     );
+  }
+
+  withCsrf<T>(request: () => Observable<T>) {
+    return this.http.get<void>('/api/auth/csrf').pipe(switchMap(request));
   }
 }

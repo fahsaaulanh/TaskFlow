@@ -27,6 +27,7 @@ internal static class BoardEndpoints
         board.MapGet("/members", async (int boardId, IBoardQueries queries, CancellationToken cancellationToken) =>
             Results.Ok(await queries.ListMembersAsync(boardId, cancellationToken)));
         board.MapGet("/tasks", ListTasksAsync);
+        board.MapTaskWrites();
     }
 
     internal static bool TryGetUserId(ClaimsPrincipal principal, out int userId) =>

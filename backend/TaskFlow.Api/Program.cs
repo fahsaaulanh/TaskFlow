@@ -4,6 +4,7 @@ using TaskFlow.Api.Auth;
 using TaskFlow.Api.Boards;
 using TaskFlow.Api.Development;
 using TaskFlow.Application.Auth;
+using TaskFlow.Application.Boards;
 using TaskFlow.Infrastructure;
 
 var seedDemo = args is ["--seed-demo"];
@@ -12,6 +13,8 @@ builder.Services.AddTaskFlowPersistence(builder.Configuration);
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
 builder.Services.AddScoped<SignInService>();
+builder.Services.AddScoped<TaskWriter>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IPasswordVerifier, IdentityPasswordVerifier>();
 var cookiePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>

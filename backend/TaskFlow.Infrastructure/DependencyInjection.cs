@@ -13,6 +13,8 @@ public static class DependencyInjection
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IBoardQueries, BoardQueries>();
+        services.AddScoped<ITaskRepository, TaskRepository>();
+        services.AddScoped<IUnitOfWork, TaskFlowUnitOfWork>();
         services.AddDbContext<TaskFlowDbContext>(options =>
         {
             var connectionString = configuration.GetConnectionString("TaskFlow");

@@ -1,0 +1,13 @@
+dialog { width: min(30rem, calc(100% - 2rem)); border: 1px solid var(--line); border-radius: .85rem; padding: 1.5rem; color: var(--ink); }
+dialog::backdrop { background: #1c243a70; }
+h2 { margin: 0 0 1rem; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: .5rem; min-width: 0; }
+label { font-weight: 600; }
+textarea { font: inherit; color: inherit; border: 1px solid var(--line); border-radius: .45rem; padding: .55rem .75rem; resize: vertical; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.fields label { display: grid; gap: .3rem; }
+.actions { display: flex; flex-wrap: wrap; justify-content: end; gap: .5rem; margin-top: 1.25rem; }
+.archive { margin-right: auto; color: #a13e34; }
+.danger { color: white; background: #a13e34; border-color: #a13e34; }
+.error { color: #a13e34; margin-block: .25rem; }
+@media (max-width: 25rem) { .fields { grid-template-columns: 1fr; } }
