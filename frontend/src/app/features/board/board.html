@@ -14,6 +14,7 @@
     }
   </div>
   @if (updateMessage()) { <p class="task-count" role="status">{{ updateMessage() }}</p> }
+  @if (moveError()) { <p class="notice" role="alert">{{ moveError() }}</p> }
   @if (logoutError()) { <p class="notice" role="alert">{{ logoutError() }}</p> }
   @if (board()) {
     <div class="toolbar" aria-label="Task filters">
@@ -48,16 +49,27 @@
     <p class="task-count" aria-live="polite">{{ total() }} {{ total() === 1 ? 'task' : 'tasks' }}</p>
     <div class="lanes">
       @for (lane of lanes(); track lane.status) {
-        <section class="lane" [attr.data-status]="lane.status" [attr.aria-labelledby]="lane.status">
+        <section class="lane" [attr.data-status]="lane.status" [attr.aria-labelledby]="lane.status"
+          [class.drop-lane]="dropTarget()?.status === lane.status && dropTarget()?.beforeTaskId === null"
+          (dragover)="dragOver($event, lane.status)" (drop)="drop($event, lane.status)">
           <h2 [id]="lane.status">{{ lane.label }} <span>{{ lane.tasks.length }}</span></h2>
           @for (task of lane.tasks; track task.id) {
-            <article class="task">
+            <article class="task" [attr.draggable]="!moving()" [class.dragging]="dragTask()?.id === task.id"
+              [class.drop-before]="dropTarget()?.beforeTaskId === task.id"
+              (dragstart)="beginDrag($event, task)" (dragend)="endDrag()"
+              (dragover)="dragOver($event, lane.status, task.id)" (drop)="drop($event, lane.status, task.id)">
               <span class="priority" [attr.data-priority]="task.priority">{{ task.priority }}</span>
               <h3>{{ task.title }}</h3>
               @if (task.description) { <p>{{ task.description }}</p> }
               <footer>
                 <span>{{ task.assigneeId === null ? 'Unassigned' : memberNames().get(task.assigneeId) ?? 'Unassigned' }}</span>
                 @if (task.dueDate) { <time [attr.datetime]="task.dueDate">{{ task.dueDate | date: 'MMM d' }}</time> }
+                <select #taskStatus class="task-edit" [attr.aria-label]="'Status for ' + task.title"
+                  [disabled]="moving()" (change)="changeTaskStatus(task, taskStatus)">
+                  @for (column of statuses; track column.status) {
+                    <option [value]="column.status" [selected]="column.status === task.status">{{ column.label }}</option>
+                  }
+                </select>
                 <button type="button" class="task-edit" [attr.aria-label]="'Edit ' + task.title" (click)="editor.open(board()!.id, task)">Edit</button>
               </footer>
             </article>

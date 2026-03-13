@@ -56,4 +56,10 @@ export class BoardApi {
   archiveTask(boardId: number, task: TaskSummary) {
     return this.http.post<void>(`/api/boards/${boardId}/tasks/${task.id}/archive`, { rowVersion: task.rowVersion });
   }
+
+  moveTask(boardId: number, task: TaskSummary, status: TaskStatus, beforeTaskId: number | null) {
+    return this.http.post<TaskSummary>(`/api/boards/${boardId}/tasks/${task.id}/move`, {
+      status, beforeTaskId, rowVersion: task.rowVersion,
+    });
+  }
 }

@@ -31,6 +31,10 @@ h2 span { font: 600 .75rem 'DM Sans', system-ui, sans-serif; background: #ffffff
 .task p { margin: 0 0 .75rem; }
 .task footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; border-top: 1px solid var(--line); padding-top: .65rem; }
 .task-edit { padding: .1rem .45rem; }
+.task[draggable='true'] { cursor: grab; }
+.task.dragging { opacity: .45; }
+.task.drop-before { box-shadow: 0 -.2rem 0 var(--indigo); }
+.lane.drop-lane { outline: 2px dashed var(--indigo); outline-offset: -3px; }
 .priority { display: inline-block; padding: .15rem .45rem; border-radius: .3rem; font-size: .75rem; background: #efedf8; color: #4d438b; }
 .priority[data-priority='High'] { background: #fce8df; color: #8b412b; }
 .priority[data-priority='Low'] { background: #e4f3ed; color: #285f53; }

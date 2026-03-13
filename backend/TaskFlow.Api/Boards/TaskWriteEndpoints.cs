@@ -1,6 +1,7 @@
 using TaskFlow.Api.Auth;
 using TaskFlow.Application.Boards;
 using TaskFlow.Domain;
+using TaskStatus = TaskFlow.Domain.TaskStatus;
 
 namespace TaskFlow.Api.Boards;
 
@@ -16,6 +17,9 @@ internal static class TaskWriteEndpoints
         tasks.MapPost("/{taskId:int}/archive", async (int boardId, int taskId, ArchiveRequest request, TaskWriter writer,
             CancellationToken cancellationToken) =>
             ToResponse(await writer.ArchiveAsync(boardId, taskId, request.RowVersion, cancellationToken), StatusCodes.Status204NoContent));
+        tasks.MapPost("/{taskId:int}/move", async (int boardId, int taskId, MoveRequest request, TaskWriter writer,
+            CancellationToken cancellationToken) =>
+            ToResponse(await writer.MoveAsync(boardId, taskId, request.ToMove(), cancellationToken), StatusCodes.Status200OK));
     }
 
     private static IResult ToResponse(TaskWriteResult result, int successStatus) => result.Status switch
@@ -29,6 +33,17 @@ internal static class TaskWriteEndpoints
     };
 
     private sealed record ArchiveRequest(byte[]? RowVersion);
+
+    private sealed record MoveRequest(string? Status, int? BeforeTaskId, byte[]? RowVersion)
+    {
+        public TaskMove ToMove() => new(Status switch
+        {
+            "Todo" => TaskStatus.Todo,
+            "InProgress" => TaskStatus.InProgress,
+            "Done" => TaskStatus.Done,
+            _ => null
+        }, BeforeTaskId, RowVersion);
+    }
 
     private sealed record TaskRequest(string? Title, string? Description, string? Priority,
         DateOnly? DueDate, int? AssigneeId, byte[]? RowVersion)

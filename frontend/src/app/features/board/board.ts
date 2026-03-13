@@ -31,6 +31,10 @@ export class Board {
   protected readonly error = signal('');
   protected readonly logoutError = signal('');
   protected readonly updateMessage = signal('');
+  protected readonly moveError = signal('');
+  protected readonly moving = signal(false);
+  protected readonly dragTask = signal<TaskSummary | null>(null);
+  protected readonly dropTarget = signal<{ status: TaskStatus; beforeTaskId: number | null } | null>(null);
   protected readonly signingOut = signal(false);
   protected readonly statuses = columns;
   protected readonly total = computed(() => this.tasks().length);
@@ -73,6 +77,73 @@ export class Board {
   protected taskSaved(message: string) {
     this.updateMessage.set(message);
     this.loadTasks();
+  }
+
+  protected beginDrag(event: DragEvent, task: TaskSummary) {
+    if (this.moving() || !event.dataTransfer) {
+      event.preventDefault();
+      return;
+    }
+    this.dragTask.set(task);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(task.id));
+  }
+
+  protected endDrag() {
+    this.dragTask.set(null);
+    this.dropTarget.set(null);
+  }
+
+  protected dragOver(event: DragEvent, status: TaskStatus, beforeTaskId: number | null = null) {
+    const task = this.dragTask();
+    if (!task) return;
+    event.stopPropagation();
+    if (beforeTaskId === task.id) {
+      this.dropTarget.set(null);
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this.dropTarget.set({ status, beforeTaskId });
+  }
+
+  protected drop(event: DragEvent, status: TaskStatus, beforeTaskId: number | null = null) {
+    const task = this.dragTask();
+    if (!task) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.endDrag();
+    if (beforeTaskId !== task.id) this.moveTask(task, status, beforeTaskId);
+  }
+
+  protected changeTaskStatus(task: TaskSummary, select: HTMLSelectElement) {
+    const status = columns.find((column) => column.status === select.value)?.status;
+    select.value = task.status;
+    if (status && status !== task.status) this.moveTask(task, status, null);
+  }
+
+  private moveTask(task: TaskSummary, status: TaskStatus, beforeTaskId: number | null) {
+    const board = this.board();
+    if (!board || this.moving()) return;
+    this.moving.set(true);
+    this.moveError.set('');
+    this.updateMessage.set('');
+    this.auth.withCsrf(() => this.api.moveTask(board.id, task, status, beforeTaskId)).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.moving.set(false)),
+    ).subscribe({
+      next: () => this.taskSaved('Task moved.'),
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.sessionExpired();
+        } else if (error.status === 409 || error.status === 404) {
+          this.moveError.set('The board changed. Try the move again after it reloads.');
+          this.loadTasks();
+        } else {
+          this.moveError.set('Could not move the task. Try again.');
+        }
+      },
+    });
   }
 
   protected sessionExpired() {

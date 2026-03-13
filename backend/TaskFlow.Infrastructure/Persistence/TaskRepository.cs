@@ -19,6 +19,11 @@ internal sealed class TaskRepository(TaskFlowDbContext db) : ITaskRepository
     }
 
     public void Add(BoardTask task) => db.Tasks.Add(task);
+
+    public Task<List<BoardTask>> ListDestinationAsync(int boardId, TaskStatus status, int movingTaskId,
+        CancellationToken cancellationToken) =>
+        db.Tasks.Where(task => task.BoardId == boardId && task.Status == status && task.Id != movingTaskId && task.ArchivedAt == null)
+            .OrderBy(task => task.SortOrder).ThenBy(task => task.Id).ToListAsync(cancellationToken);
 }
 
 internal sealed class TaskFlowUnitOfWork(TaskFlowDbContext db) : IUnitOfWork
