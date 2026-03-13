@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, finalize, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { BoardApi, BoardMember, BoardSummary, TaskFilters, TaskStatus, TaskSummary } from './board-api';
@@ -15,7 +15,7 @@ const columns: ReadonlyArray<{ status: TaskStatus; label: string }> = [
 ];
 const emptyFilters: TaskFilters = { status: '', priority: '', assigneeId: '' };
 
-@Component({ imports: [DatePipe, TaskEditor], templateUrl: './board.html', styleUrl: './board.css' })
+@Component({ imports: [DatePipe, RouterLink, TaskEditor], templateUrl: './board.html', styleUrl: './board.css' })
 export class Board {
   private readonly api = inject(BoardApi);
   private readonly auth = inject(AuthService);

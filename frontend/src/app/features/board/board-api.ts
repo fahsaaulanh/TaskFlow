@@ -19,6 +19,17 @@ export interface TaskSummary {
 }
 
 export interface TaskFilters { status: string; priority: string; assigneeId: string; }
+export interface BoardAnalytics { total: number; todo: number; inProgress: number; done: number; overdue: number; }
+export interface ActivityEntry {
+  id: number;
+  taskId: number;
+  taskTitle: string;
+  actorName: string;
+  previousStatus: TaskStatus;
+  newStatus: TaskStatus;
+  occurredAtUtc: string;
+}
+export interface ActivityPage { items: ActivityEntry[]; page: number; pageSize: number; hasMore: boolean; }
 export interface TaskForm {
   title: string;
   description: string | null;
@@ -35,6 +46,17 @@ export class BoardApi {
 
   members(boardId: number) {
     return this.http.get<BoardMember[]>(`/api/boards/${boardId}/members`);
+  }
+
+  analytics(boardId: number) {
+    return this.http.get<BoardAnalytics>(`/api/boards/${boardId}/analytics`);
+  }
+
+  activity(boardId: number, from: string, to: string, page: number) {
+    let params = new HttpParams().set('page', page);
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<ActivityPage>(`/api/boards/${boardId}/activity`, { params });
   }
 
   tasks(boardId: number, filters: TaskFilters) {

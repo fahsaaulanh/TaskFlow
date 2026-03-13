@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using TaskFlow.Api.Auth;
 using TaskFlow.Application.Boards;
 using TaskFlow.Domain;
@@ -18,8 +19,10 @@ internal static class TaskWriteEndpoints
             CancellationToken cancellationToken) =>
             ToResponse(await writer.ArchiveAsync(boardId, taskId, request.RowVersion, cancellationToken), StatusCodes.Status204NoContent));
         tasks.MapPost("/{taskId:int}/move", async (int boardId, int taskId, MoveRequest request, TaskWriter writer,
-            CancellationToken cancellationToken) =>
-            ToResponse(await writer.MoveAsync(boardId, taskId, request.ToMove(), cancellationToken), StatusCodes.Status200OK));
+            ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+            BoardEndpoints.TryGetUserId(principal, out var actorId)
+                ? ToResponse(await writer.MoveAsync(boardId, taskId, request.ToMove(), actorId, cancellationToken), StatusCodes.Status200OK)
+                : Results.Unauthorized());
     }
 
     private static IResult ToResponse(TaskWriteResult result, int successStatus) => result.Status switch

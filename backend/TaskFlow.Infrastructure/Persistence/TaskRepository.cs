@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Application.Boards;
 using TaskFlow.Domain;
@@ -28,7 +29,35 @@ internal sealed class TaskRepository(TaskFlowDbContext db) : ITaskRepository
 
 internal sealed class TaskFlowUnitOfWork(TaskFlowDbContext db) : IUnitOfWork
 {
-    public async Task<bool> TrySaveAsync(CancellationToken cancellationToken)
+    public async Task<bool> TrySaveAsync(CancellationToken cancellationToken, int? statusChangeActorId = null)
+    {
+        if (statusChangeActorId is not { } actorId) return await SaveAsync(cancellationToken);
+
+        await db.Database.OpenConnectionAsync(cancellationToken);
+        try
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"EXEC sys.sp_set_session_context @key = N'TaskFlowActorId', @value = {actorId}", cancellationToken);
+            return await SaveAsync(cancellationToken);
+        }
+        finally
+        {
+            try
+            {
+                await db.Database.ExecuteSqlRawAsync("EXEC sys.sp_set_session_context @key = N'TaskFlowActorId', @value = NULL");
+            }
+            catch (SqlException)
+            {
+                // Discard the pooled connection if its session metadata could not be reset.
+                SqlConnection.ClearPool((SqlConnection)db.Database.GetDbConnection());
+            }
+            finally
+            {
+                await db.Database.CloseConnectionAsync();
+            }
+        }
+    }
+
+    private async Task<bool> SaveAsync(CancellationToken cancellationToken)
     {
         try
         {

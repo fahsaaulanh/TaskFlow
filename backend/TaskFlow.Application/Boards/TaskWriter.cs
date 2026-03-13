@@ -24,7 +24,7 @@ public interface ITaskRepository
 
 public interface IUnitOfWork
 {
-    Task<bool> TrySaveAsync(CancellationToken cancellationToken);
+    Task<bool> TrySaveAsync(CancellationToken cancellationToken, int? statusChangeActorId = null);
 }
 
 public sealed class TaskWriter(ITaskRepository tasks, IBoardQueries boards, IUnitOfWork unitOfWork, TimeProvider clock)
@@ -77,7 +77,7 @@ public sealed class TaskWriter(ITaskRepository tasks, IBoardQueries boards, IUni
         return await SaveAsync(task, cancellationToken);
     }
 
-    public async Task<TaskWriteResult> MoveAsync(int boardId, int taskId, TaskMove move, CancellationToken cancellationToken)
+    public async Task<TaskWriteResult> MoveAsync(int boardId, int taskId, TaskMove move, int actorId, CancellationToken cancellationToken)
     {
         var errors = new Dictionary<string, string[]>();
         if (move.Status is not { } status || !Enum.IsDefined(status)) errors["status"] = ["Choose a valid status."];
@@ -96,6 +96,7 @@ public sealed class TaskWriter(ITaskRepository tasks, IBoardQueries boards, IUni
             : destination.Count;
         if (position < 0) return new(TaskWriteStatus.Conflict);
 
+        var statusChanged = task.Status != destinationStatus;
         destination.Insert(position, task);
         var now = clock.GetUtcNow();
         for (var order = 0; order < destination.Count; order++)
@@ -108,7 +109,7 @@ public sealed class TaskWriter(ITaskRepository tasks, IBoardQueries boards, IUni
             candidate.UpdatedAt = now;
         }
 
-        return await SaveAsync(task, cancellationToken);
+        return await SaveAsync(task, cancellationToken, statusChanged ? actorId : null);
     }
 
     private async Task<Dictionary<string, string[]>> ValidateAsync(int boardId, TaskForm form, CancellationToken cancellationToken)
@@ -135,9 +136,9 @@ public sealed class TaskWriter(ITaskRepository tasks, IBoardQueries boards, IUni
         task.UpdatedAt = updatedAt;
     }
 
-    private async Task<TaskWriteResult> SaveAsync(BoardTask task, CancellationToken cancellationToken)
+    private async Task<TaskWriteResult> SaveAsync(BoardTask task, CancellationToken cancellationToken, int? statusChangeActorId = null)
     {
-        if (!await unitOfWork.TrySaveAsync(cancellationToken)) return new(TaskWriteStatus.Conflict);
+        if (!await unitOfWork.TrySaveAsync(cancellationToken, statusChangeActorId)) return new(TaskWriteStatus.Conflict);
 
         return new(TaskWriteStatus.Saved, new TaskSummary(task.Id, task.Title, task.Description, task.Status,
             task.Priority, task.DueDate, task.AssigneeId, task.SortOrder, task.RowVersion));

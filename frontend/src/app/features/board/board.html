@@ -1,6 +1,7 @@
 <header class="workspace-bar">
   <img class="brand" src="taskflow-logo.svg" alt="TaskFlow">
   <div class="account">
+    <a routerLink="/insights">Insights &amp; activity</a>
     <span>{{ user()?.displayName }}</span>
     <button type="button" (click)="signOut()" [disabled]="signingOut()">{{ signingOut() ? 'Signing out…' : 'Sign out' }}</button>
   </div>
