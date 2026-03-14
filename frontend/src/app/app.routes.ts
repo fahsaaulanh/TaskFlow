@@ -9,5 +9,10 @@ export const routes: Routes = [
     canActivate: [sessionGuard],
     loadComponent: () => import('./features/board/board').then((m) => m.Board),
   },
+  {
+    path: 'insights',
+    canActivate: [sessionGuard],
+    loadComponent: () => import('./features/insights/insights').then((m) => m.Insights),
+  },
   { path: '**', redirectTo: 'board' },
 ];

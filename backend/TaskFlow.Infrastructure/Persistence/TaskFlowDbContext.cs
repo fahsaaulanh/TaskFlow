@@ -35,6 +35,7 @@ public sealed class TaskFlowDbContext(DbContextOptions<TaskFlowDbContext> option
         {
             task.ToTable("Tasks", table =>
             {
+                table.UseSqlOutputClause(false);
                 table.HasCheckConstraint("CK_Tasks_Title_Length", "LEN(LTRIM(RTRIM([Title]))) BETWEEN 3 AND 120");
                 table.HasCheckConstraint("CK_Tasks_Status", "[Status] IN ('Todo', 'InProgress', 'Done')");
                 table.HasCheckConstraint("CK_Tasks_Priority", "[Priority] IN ('Low', 'Medium', 'High')");

@@ -126,6 +126,8 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Tasks_Title_Length", "LEN(LTRIM(RTRIM([Title]))) BETWEEN 3 AND 120");
                         });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("TaskFlow.Domain.TaskStatusChange", b =>

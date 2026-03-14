@@ -28,6 +28,7 @@ internal static class BoardEndpoints
             Results.Ok(await queries.ListMembersAsync(boardId, cancellationToken)));
         board.MapGet("/tasks", ListTasksAsync);
         board.MapTaskWrites();
+        board.MapInsights();
     }
 
     internal static bool TryGetUserId(ClaimsPrincipal principal, out int userId) =>
