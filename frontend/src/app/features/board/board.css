@@ -15,6 +15,11 @@
 .workspace { max-width: 96rem; margin-inline: auto; padding: 2rem clamp(1rem, 4vw, 3rem); }
 .board-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
 h1 { margin: 0; }
+.board-title { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; }
+.live-status { display: flex; align-items: center; gap: .5rem; }
+.live-status span { padding: .2rem .55rem; border-radius: .4rem; background: #fff4dc; color: #76501f; font-size: .8rem; }
+.live-status span[data-state='live'] { background: #e4f3ed; color: #285f53; }
+.live-status button { padding: .15rem .45rem; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: .85rem; }
 .toolbar label { display: grid; gap: .3rem; font-weight: 600; }
 .task-count, .empty { color: var(--muted); }

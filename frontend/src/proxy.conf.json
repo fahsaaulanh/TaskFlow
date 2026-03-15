@@ -2,6 +2,10 @@
   "/api/**": {
     "target": "http://127.0.0.1:5252"
   },
+  "/hubs/**": {
+    "target": "http://127.0.0.1:5252",
+    "ws": true
+  },
   "/health": {
     "target": "http://127.0.0.1:5252"
   }

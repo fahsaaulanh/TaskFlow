@@ -14,6 +14,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
 builder.Services.AddScoped<SignInService>();
 builder.Services.AddScoped<TaskWriter>();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<BoardChangeNotifier>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IPasswordVerifier, IdentityPasswordVerifier>();
 var cookiePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
@@ -58,5 +60,15 @@ if (seedDemo)
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapTaskFlowAuth();
 app.MapTaskFlowBoards();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/hubs/board") && !BoardHub.IsSameOrigin(context.Request))
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return;
+    }
+    await next(context);
+});
+app.MapHub<BoardHub>("/hubs/board", options => options.CloseOnAuthenticationExpiration = true).RequireAuthorization();
 
 app.Run();

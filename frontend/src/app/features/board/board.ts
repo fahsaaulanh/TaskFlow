@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, finalize, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { BoardApi, BoardMember, BoardSummary, TaskFilters, TaskStatus, TaskSummary } from './board-api';
+import { BoardLive } from './board-live';
 import { TaskEditor } from './task-editor';
 
 const columns: ReadonlyArray<{ status: TaskStatus; label: string }> = [
@@ -15,7 +16,7 @@ const columns: ReadonlyArray<{ status: TaskStatus; label: string }> = [
 ];
 const emptyFilters: TaskFilters = { status: '', priority: '', assigneeId: '' };
 
-@Component({ imports: [DatePipe, RouterLink, TaskEditor], templateUrl: './board.html', styleUrl: './board.css' })
+@Component({ imports: [DatePipe, RouterLink, TaskEditor], providers: [BoardLive], templateUrl: './board.html', styleUrl: './board.css' })
 export class Board {
   private readonly api = inject(BoardApi);
   private readonly auth = inject(AuthService);
@@ -23,6 +24,9 @@ export class Board {
   private readonly destroyRef = inject(DestroyRef);
   private readonly taskRequests = new Subject<{ boardId: number; filters: TaskFilters }>();
   private readonly tasks = signal<TaskSummary[]>([]);
+  private pendingLiveRefresh = false;
+  protected readonly live = inject(BoardLive);
+  protected readonly liveLabels = { connecting: 'Connecting…', live: 'Live', reconnecting: 'Reconnecting…', offline: 'Live updates offline' };
   protected readonly board = signal<BoardSummary | null>(null);
   protected readonly members = signal<BoardMember[]>([]);
   protected readonly filters = signal<TaskFilters>(emptyFilters);
@@ -92,6 +96,7 @@ export class Board {
   protected endDrag() {
     this.dragTask.set(null);
     this.dropTarget.set(null);
+    this.flushLiveRefresh();
   }
 
   protected dragOver(event: DragEvent, status: TaskStatus, beforeTaskId: number | null = null) {
@@ -130,7 +135,10 @@ export class Board {
     this.updateMessage.set('');
     this.auth.withCsrf(() => this.api.moveTask(board.id, task, status, beforeTaskId)).pipe(
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.moving.set(false)),
+      finalize(() => {
+        this.moving.set(false);
+        this.flushLiveRefresh();
+      }),
     ).subscribe({
       next: () => this.taskSaved('Task moved.'),
       error: (error: HttpErrorResponse) => {
@@ -180,17 +188,29 @@ export class Board {
         this.board.set(result.board);
         this.members.set(result.members);
         this.loadTasks();
+        this.live.watch(result.board.id, () => this.refreshFromLive());
       },
       error: (error: HttpErrorResponse) => this.handleLoadError(error),
     });
   }
 
-  private loadTasks() {
+  private loadTasks(showLoading = true) {
     const board = this.board();
     if (!board) return;
-    this.loading.set(true);
+    if (showLoading) this.loading.set(true);
     this.error.set('');
     this.taskRequests.next({ boardId: board.id, filters: this.filters() });
+  }
+
+  private refreshFromLive() {
+    this.pendingLiveRefresh = true;
+    this.flushLiveRefresh();
+  }
+
+  private flushLiveRefresh() {
+    if (!this.pendingLiveRefresh || this.dragTask() || this.moving() || this.destroyRef.destroyed) return;
+    this.pendingLiveRefresh = false;
+    this.loadTasks(false);
   }
 
   private handleLoadError(error: HttpErrorResponse) {

@@ -9,7 +9,15 @@
 
 <main class="workspace">
   <div class="board-heading">
-    <h1>{{ board()?.name ?? 'Workspace' }}</h1>
+    <div class="board-title">
+      <h1>{{ board()?.name ?? 'Workspace' }}</h1>
+      @if (board()) {
+        <div class="live-status">
+          <span role="status" [attr.data-state]="live.status()">{{ liveLabels[live.status()] }}</span>
+          @if (live.status() === 'offline') { <button type="button" (click)="live.retry()">Reconnect</button> }
+        </div>
+      }
+    </div>
     @if (board(); as activeBoard) {
       <button type="button" class="primary" (click)="editor.open(activeBoard.id)">New task</button>
     }
