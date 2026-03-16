@@ -83,3 +83,33 @@ Drag a card onto another card to insert it before that card, or onto a column to
 Open **Insights & activity** from the board to see active task counts and status changes. The `analytics` route reads a SQL view. A task is overdue when its due date is before the current UTC date and it is neither done nor archived. The `activity` route uses a stored procedure with optional `from`, `to`, `page`, and `pageSize` parameters. Both date filters include the selected UTC day. Status changes are recorded in the same database transaction as the move and remain visible after archive.
 
 When the board shows **Live**, open it in a normal window and a private window with different demo accounts to try live updates. Create, edit, move, or archive a task in one session and watch the other board refresh. The authenticated `/hubs/board` connection checks membership before joining a board group. After reconnecting, the client rejoins and reloads the active task list.
+
+## Tests and CI
+
+Run the Angular checks from `frontend` with Node.js 24:
+
+```powershell
+npm ci
+npm run build
+npm test -- --watch=false
+```
+
+With the local SQL Server container running and frontend dependencies installed, run the integration suite from the repository root:
+
+```powershell
+node --test scripts/integration.test.cjs
+```
+
+The suite builds the API, migrates and seeds a disposable SQL Server database, and checks authorization, writes, concurrency, analytics, activity, and live notifications. It removes the test database after the run. The `azure-pipelines.yml` file defines the same build and test checks on a hosted Ubuntu agent and starts a disposable SQL Server container for integration tests.
+
+## Architecture
+
+Angular groups login, board, and insights by feature. Its development proxy sends same-origin API and WebSocket requests to ASP.NET Core. The API handles authentication, board membership, and HTTP responses. Application coordinates use cases through interfaces implemented by Infrastructure. Infrastructure uses EF Core and SQL Server, while Domain holds the board, member, task, and status models. The API broadcasts changes after the Unit of Work saves them. Clients reload the board from the API after a notification or reconnection.
+
+## Three-minute demo
+
+1. Start SQL Server, API, and Angular using the local setup above.
+2. Open `http://localhost:4200` in a normal and private window. Sign in as Alex in one and Dina in the other. Use the password chosen during seeding, or the `TASKFLOW_DEMO_PASSWORD` value if your local `.env` already has one.
+3. Wait for **Live** in both windows. Create a task as Alex and check that it appears for Dina.
+4. Move that task to **In progress**. Check both boards and open **Insights & activity** to see the counts and the status change attributed to Alex.
+5. Archive the task and confirm that it disappears from the board while its status-change history remains visible.
